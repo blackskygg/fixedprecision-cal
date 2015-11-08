@@ -6,6 +6,9 @@
 #include "regex_table.h"
 
 #define EUNKNOWN -1
+#define ETOOLONG -2
+
+#define MAX_TOKEN_SIZE 1024
 
 enum token_type {
         TOKEN_UNKNOWN = UNKNOWN_NR,

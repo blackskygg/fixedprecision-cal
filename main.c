@@ -2,33 +2,38 @@
 #include <stdlib.h>
 #include "list.h"
 #include "tokenize.h"
+#include "parse.h"
 
-void print_token(void *data)
+void print_expr_item(void *data)
 {
-        struct token_t *token = list_container_of(data, struct token_t, list);
-        printf("type %d, start: %d, end %d\n", token->type, token->start, token->end);
+        struct expr_item *item = list_container_of(data, struct expr_item, list);
+        printf("type %d, %llf\n", item->type, item->val);
 }
 
-static inline void del_token(void *data)
+static inline void del_item(void *data)
 {
-        list_delete(data, struct token_t, list);
+        list_delete(data, struct expr_item, list);
 }
 
 int main()
 {
         struct list_head token_list;
+        struct list_head item_list;
         char s[1024];
 
         init_tokenizer();
         list_init(&token_list);
+        list_init(&item_list);
         while(1) {
                 fgets(s, 1024, stdin);
                 if(tokenize(s, &token_list) < 0) {
                         printf("error\n");
                         continue;
                 }
-                list_iter(&token_list, print_token);
-                list_iter(&token_list, del_token);
+                parse(s, &token_list, &item_list);
+
+                list_iter(&item_list, print_expr_item);
+                list_iter(&item_list, del_item);
         }
 
         return 0;
