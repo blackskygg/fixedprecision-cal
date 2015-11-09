@@ -1,13 +1,33 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
+#include <float.h>
+#include <math.h>
 #include "parse.h"
 
-static void getval(char *begin, char *end, long double *val, int base);
+#define exit_err(errno, ptr) ({                         \
+                        parser_perror(errno);           \
+                        NULL != ptr ? free(ptr) : 0;    \
+                        return errno;})
 
-static void getval(char *begin, char *end, long double *val, int base)
+static char* errmap[] = {
+        "",
+        "out of precision",
+        "out of memory",
+};
+
+static void parser_perror(int errno);
+static int getval(char *begin, char *end, long double *val, int base);
+
+static int getval(char *begin, char *end, long double *val, int base)
 {
         char *pos_dot;
         char val_str[MAX_TOKEN_SIZE + 1];
+
+        if(end - begin + 1> LDBL_DIG / log10(base))
+        {
+                return EPRECISION;
+        }
 
         pos_dot = begin;
         while(pos_dot != end + 1 && *pos_dot != '.')
@@ -43,30 +63,44 @@ int parse(char *s, struct list_head* token_list, struct list_head* expr_item_lis
         while(!list_is_empty(token_list)) {
                 curr = token_list->next;
                 token = list_container_of(curr, struct token_t, list);
-                item = malloc(sizeof(struct expr_item));
+                if( NULL == (item = malloc(sizeof(struct expr_item))) ) {
+                        exit_err(EPARSEMEMORY, NULL);
+                }
 
                 switch(token->type) {
                 case TOKEN_DEC:
                         prev_valid_item = item->type = EXPR_CONST;
-                        getval(s+token->start, s+token->end, &item->val, 10);
+                        if (EPRECISION ==  getval(s+token->start, s+token->end, &item->val, 10)) {
+                                fwrite(s, token->start - token->end, 1, stdout);
+                                exit_err(EPRECISION, item);
+                        }
                         list_insert_back(expr_item_list, &item->list);
                         break;
 
                 case TOKEN_HEX:
                         prev_valid_item = item->type = EXPR_CONST;
-                        getval(s+token->start + 2, s+token->end, &item->val, 16);
+                        if (EPRECISION ==  getval(s+token->start + 2, s+token->end, &item->val, 16)) {
+                                fwrite(s, token->start - token->end, 1, stdout);
+                                exit_err(EPRECISION, item);
+                        }
                         list_insert_back(expr_item_list, &item->list);
                         break;
 
                 case TOKEN_OCT:
                         prev_valid_item = item->type = EXPR_CONST;
-                        getval(s+token->start + 1, s+token->end, &item->val, 8);
+                        if (EPRECISION ==  getval(s+token->start + 1, s+token->end, &item->val, 8)) {
+                                fwrite(s, token->start - token->end, 1, stdout);
+                                exit_err(EPRECISION, item);
+                        }
                         list_insert_back(expr_item_list, &item->list);
                         break;
 
                 case TOKEN_BIN:
                         prev_valid_item = item->type = EXPR_CONST;
-                        getval(s+token->start, s+token->end - 1, &item->val, 2);
+                        if (EPRECISION ==  getval(s+token->start, s+token->end - 1, &item->val, 2)) {
+                                fwrite(s, token->start - token->end, 1, stdout);
+                                exit_err(EPRECISION, item);
+                        }
                         list_insert_back(expr_item_list, &item->list);
                         break;
 
@@ -122,3 +156,8 @@ int parse(char *s, struct list_head* token_list, struct list_head* expr_item_lis
         return 0;
 }
 
+static void parser_perror(int errno)
+{
+        printf("tokenizer error: %s\n", errmap[-errno]);
+
+}

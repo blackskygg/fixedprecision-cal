@@ -1,12 +1,14 @@
 #ifndef TOKENIZE_H_
 #define TOKENIZE_H_
 
+#include <float.h>
 #include "list.h"
 #include "syntax.h"
 #include "regex_table.h"
 
 #define EUNKNOWN -1
 #define ETOOLONG -2
+#define ETOKENMEMORY -3
 
 #define MAX_TOKEN_SIZE 1024
 

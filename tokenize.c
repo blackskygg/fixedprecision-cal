@@ -3,13 +3,15 @@
 #include "regex_table.h"
 #include "tokenize.h"
 
+
 static char* errmap[] = {
         "",
         "unknown token",
-        "token too long"
+        "token too long",
+        "expression too long, out of memory",
 };
 
-static void tokenizer_error(int errno, char *s);
+static void tokenizer_perror(int errno, char *s);
 static int get_next_token(char* s, struct token_t* token);
 
 static int get_next_token(char* s, struct token_t* token)
@@ -47,12 +49,16 @@ int tokenize(char* s, struct list_head *token_list)
         struct token_t *token_ptr;
 
         while(*pos != '\0') {
-                token_ptr = malloc(sizeof(struct token_t));
+
+                if( NULL == (token_ptr = malloc(sizeof(struct token_t))) ) {
+                        tokenizer_perror(ETOKENMEMORY, pos);
+                        return ETOKENMEMORY;
+                }
 
                 token_len = get_next_token(pos, token_ptr);
                 if(token_len < 0) {
                         free(token_ptr);
-                        tokenizer_error(token_len, pos);
+                        tokenizer_perror(token_len, pos);
                         return token_len;
                 } else {
                         token_ptr->start = pos - s;
@@ -76,7 +82,7 @@ void destroy_tokenizer()
         destroy_fa_table();
 }
 
-static void tokenizer_error(int errno, char *s)
+static void tokenizer_perror(int errno, char *s)
 {
         printf("tokenizer error: %s\n"
                "near position %s\n", errmap[-errno], s);

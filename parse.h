@@ -4,6 +4,9 @@
 #include "list.h"
 #include "tokenize.h"
 
+#define EPRECISION -1
+#define EPARSEMEMORY -2
+
 enum expr_item_type {
         EXPR_NULL = 0,
         EXPR_CONST,

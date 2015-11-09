@@ -3,27 +3,39 @@
 #include "list.h"
 #include "eval.h"
 
+#define err_exit(errno) ({                                      \
+                        list_iter(&expression, del_expr_list);  \
+                        list_iter(&eval_stack, del_expr_list);  \
+                                                                \
+                        eval_perror(errno);                     \
+                        return errno;})                         \
+
 #define do_opt_1(op, stack) ({                                          \
-                        if(list_is_empty(stack)) {                      \
-                                goto ERR_EOPERAND;                      \
-                        }                                               \
-                        struct expr_item *__item = list_container_of((stack)->prev, struct expr_item, list); \
-                        __item->val = op __item->val;                   })
+                        if(list_is_empty(stack))                        \
+                                err_exit(EOPERAND);                     \
+                                                                        \
+                        struct expr_item *__item;                       \
+                        __item = list_container_of((stack)->prev, struct expr_item, list); \
+                        __item->val = op __item->val;})
+
 
 #define do_opt_2(op, stack) ({                                          \
-                        if(list_is_empty(stack)) {                      \
-                                goto ERR_EOPERAND;                      \
-                        }                                               \
-                        struct expr_item *__item1 = list_container_of((stack)->prev, struct expr_item, list); \
+                        if(list_is_empty(stack))                        \
+                                err_exit(EOPERAND);                     \
+                                                                        \
+                        struct expr_item *__item1;                      \
+                        __item1 = list_container_of((stack)->prev, struct expr_item, list); \
+                                                                        \
                         long double __operand2 = __item1->val;          \
                         list_delete((stack)->prev, struct expr_item, list); \
                                                                         \
-                        if(list_is_empty(stack)) {                      \
-                                goto ERR_EOPERAND;                      \
-                        }                                               \
-                        struct expr_item *__item2 = list_container_of((stack)->prev, struct expr_item, list); \
+                        if(list_is_empty(stack))                        \
+                                err_exit(EOPERAND);                     \
                                                                         \
+                        struct expr_item *__item2;                      \
+                        __item2 = list_container_of((stack)->prev, struct expr_item, list); \
                         __item2->val = __item2->val op __item1->val;})
+
 
 //global variables
 static int priority[] = {
@@ -42,11 +54,12 @@ static char *errmap[] = {
         "mismatched parentheses",
         "invalid number of operands",
         "empty expression",
+        "0-division",
         "unknown evaluation error"
 };
 
 //local functions
-static inline void eval_error(int errno);
+static inline void eval_perror(int errno);
 static inline void del_expr_list(void *list_member);
 
 static inline void del_expr_list(void *list_member)
@@ -115,7 +128,7 @@ int eval(long double *result, struct list_head *expr_item_list)
                         if(top_item_ptr->type == EXPR_LB) {
                                 list_delete(&top_item_ptr->list, struct expr_item, list);
                         } else {
-                                goto ERR_EMISMATCH;
+                                err_exit(EMISMATCH);
                         }
                         break;
 
@@ -156,19 +169,22 @@ int eval(long double *result, struct list_head *expr_item_list)
                         list_delete(curr, struct expr_item, list);
                         break;
                 case EXPR_OP_DIV:
+                        if(list_container_of(eval_stack.prev, struct expr_item, list)->val == 0)
+                                err_exit(E0DIV);
+
                         do_opt_2(/, &eval_stack);
                         list_delete(curr, struct expr_item, list);
                         break;
                 case EXPR_LB:
                 case EXPR_RB:
-                        goto ERR_EMISMATCH;
+                        err_exit(EMISMATCH);
                         break;
 
                 }
         }
 
         if(list_is_empty(&eval_stack) || eval_stack.prev->prev != &eval_stack) {
-                goto ERR_UNKNOWNEXPR;
+                err_exit(EUNKNOWNEXPR);
         }
 
         item_ptr = list_container_of(eval_stack.prev, struct expr_item, list);
@@ -176,32 +192,9 @@ int eval(long double *result, struct list_head *expr_item_list)
         list_delete(eval_stack.prev, struct expr_item, list);
 
         return 0;
-
-ERR_EOPERAND:
-        list_iter(&expression, del_expr_list);
-        list_iter(&eval_stack, del_expr_list);
-
-        eval_error(EOPERAND);
-        return EOPERAND;
-
-
-ERR_EMISMATCH:
-        list_iter(&op_stack, del_expr_list);
-        list_iter(&expression, del_expr_list);
-
-        eval_error(EMISMATCH);
-        return EMISMATCH;
-
-ERR_UNKNOWNEXPR:
-        list_iter(&op_stack, del_expr_list);
-        list_iter(&expression, del_expr_list);
-
-        eval_error(EUNKNOWNEXPR);
-        return EUNKNOWN;
-
 }
 
-static inline void eval_error(int errno)
+static inline void eval_perror(int errno)
 {
         printf("eval error: %s\n", errmap[-errno]);
 }

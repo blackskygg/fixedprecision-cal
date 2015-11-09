@@ -47,7 +47,7 @@ int main(int argc, char **argv)
                                 continue;
                         }
 
-                        printf("%s = %llf\n", *argv, result);
+                        printf("%s = %Lf\n", *argv, result);
 
                 }
 
@@ -80,7 +80,7 @@ int main(int argc, char **argv)
                         continue;
                 }
 
-                printf("= %llf\n", result);
+                printf("= %Lf\n", result);
         }
 
 EXIT:

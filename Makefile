@@ -1,4 +1,4 @@
-CFLAGS := --std=c11
+CFLAGS := --std=c11 -lm
 CC := gcc
 
 all : cal
