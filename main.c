@@ -1,39 +1,84 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "list.h"
 #include "tokenize.h"
 #include "parse.h"
+#include "eval.h"
 
-void print_expr_item(void *data)
-{
-        struct expr_item *item = list_container_of(data, struct expr_item, list);
-        printf("type %d, %llf\n", item->type, item->val);
-}
+#define EXPRESSION_LEN 1024*1024
+
+static char buffer[EXPRESSION_LEN];
 
 static inline void del_item(void *data)
 {
         list_delete(data, struct expr_item, list);
 }
 
-int main()
+int main(int argc, char **argv)
 {
         struct list_head token_list;
         struct list_head item_list;
-        char s[1024];
+        long double result;
 
         init_tokenizer();
         list_init(&token_list);
         list_init(&item_list);
-        while(1) {
-                fgets(s, 1024, stdin);
-                if(tokenize(s, &token_list) < 0) {
-                        printf("error\n");
+
+        if(argc > 1) {
+                while(--argc) {
+
+                        argv++;
+
+                        if(tokenize(*argv, &token_list) < 0) {
+                        list_iter(&token_list, del_item);
+                        continue;
+                        }
+
+                        if(parse(*argv, &token_list, &item_list) < 0) {
+                                list_iter(&token_list, del_item);
+                                list_iter(&item_list, del_item);
+                                continue;
+                        }
+
+                        if(eval(&result, &item_list) <0) {
+                                list_iter(&token_list, del_item);
+                                list_iter(&item_list, del_item);
+                                continue;
+                        }
+
+                        printf("%s = %llf\n", *argv, result);
+
+                }
+                return 0;
+        }
+
+        for(;;) {
+                printf(">>");
+
+                fgets(buffer, sizeof(buffer), stdin);
+                if(!strncasecmp(buffer, "exit", 4)) {
+                        return 0;
+                }
+
+                if(tokenize(buffer, &token_list) < 0) {
+                        list_iter(&token_list, del_item);
                         continue;
                 }
-                parse(s, &token_list, &item_list);
 
-                list_iter(&item_list, print_expr_item);
-                list_iter(&item_list, del_item);
+                if(parse(buffer, &token_list, &item_list) < 0) {
+                        list_iter(&token_list, del_item);
+                        list_iter(&item_list, del_item);
+                        continue;
+                }
+
+                if(eval(&result, &item_list) <0) {
+                        list_iter(&token_list, del_item);
+                        list_iter(&item_list, del_item);
+                        continue;
+                }
+
+                printf("= %llf\n", result);
         }
 
         return 0;

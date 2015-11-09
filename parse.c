@@ -2,7 +2,9 @@
 #include <string.h>
 #include "parse.h"
 
-void getval(char *begin, char *end, long double *val, int base)
+static void getval(char *begin, char *end, long double *val, int base);
+
+static void getval(char *begin, char *end, long double *val, int base)
 {
         char *pos_dot;
         char val_str[MAX_TOKEN_SIZE + 1];
@@ -37,10 +39,9 @@ int parse(char *s, struct list_head* token_list, struct list_head* expr_item_lis
         struct expr_item *item;
         enum expr_item_type prev_valid_item;
 
-        curr = token_list;
         prev_valid_item = EXPR_NULL;
-        while(curr->next != token_list) {
-                curr = curr->next;
+        while(!list_is_empty(token_list)) {
+                curr = token_list->next;
                 token = list_container_of(curr, struct token_t, list);
                 item = malloc(sizeof(struct expr_item));
 
@@ -117,5 +118,7 @@ int parse(char *s, struct list_head* token_list, struct list_head* expr_item_lis
 
                 list_delete(curr, struct token_t, list);
         }
+
+        return 0;
 }
 

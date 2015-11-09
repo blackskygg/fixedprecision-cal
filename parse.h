@@ -5,7 +5,7 @@
 #include "tokenize.h"
 
 enum expr_item_type {
-        EXPR_NULL,
+        EXPR_NULL = 0,
         EXPR_CONST,
         EXPR_OP_ADD,
         EXPR_OP_POS,

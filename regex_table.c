@@ -36,7 +36,6 @@ void build_fa_table()
         build_regex_table();
         for(i = 0; i < NR_SYNTAX; ++i) {
                 err_code = regcomp(&fa_table[i], regex_table[i], REG_EXTENDED|REG_ICASE);
-                printf("%d: %s\n", i, regex_table[i]);
                 if(err_code != 0) {
                         regerror(err_code, &fa_table[i], err_buf, ERR_BUFSIZE);
                         printf("error: %s\nwhile processing No.(%d) %s", err_buf, i, regex_table[i]);

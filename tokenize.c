@@ -4,11 +4,13 @@
 #include "tokenize.h"
 
 static char* errmap[] = {
+        "",
         "unknown token",
         "token too long"
 };
 
 static void tokenizer_error(int errno, char *s);
+static int get_next_token(char* s, struct token_t* token);
 
 static int get_next_token(char* s, struct token_t* token)
 {

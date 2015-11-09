@@ -32,17 +32,26 @@ static inline void __list_delete(struct list_head *elem)
         elem->next->prev = elem->prev;
 }
 
+#define list_is_empty(head_ptr) ((head_ptr)->next == (head_ptr))
+
 static inline void list_iter(struct list_head *head, void (*func)(void*))
 {
-        struct list_head *curr;
-
-        curr = head;
-        while(curr->next != head) {
-                curr = curr->next;
-                func(curr);
+        while(!list_is_empty(head)) {
+                func(head->next);
         }
 }
 
+static inline void list_move_back(struct list_head *head, struct list_head *elem)
+{
+        __list_delete(elem);
+        list_insert_back(head, elem);
+}
+
+static inline void list_move_front(struct list_head *head, struct list_head *elem)
+{
+        __list_delete(elem);
+        list_insert_front(head, elem);
+}
 
 #define __offset_of(type, member) ((size_t) &((type *)0)->member)
 
