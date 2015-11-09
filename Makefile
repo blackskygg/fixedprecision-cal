@@ -4,7 +4,7 @@ CC := gcc
 all : cal
 
 cal : regex_table.o parse.o tokenize.o eval.o main.o
-	$(CC) regex_table.o parse.o tokenize.o eval.o main.o -o cal
+	$(CC) $(CFLAGS) regex_table.o parse.o tokenize.o eval.o main.o -o cal
 
 regex_table.o : regex_table.c syntax.h regex_table.h
 	$(CC) $(CFLAGS) -c regex_table.c
