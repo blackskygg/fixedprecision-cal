@@ -43,3 +43,12 @@ void build_fa_table()
                 }
         }
 }
+
+void destroy_fa_table()
+{
+        int i;
+
+        for(i = 0; i < NR_SYNTAX; ++i) {
+                regfree(&fa_table[i]);
+        }
+}

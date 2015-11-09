@@ -31,8 +31,8 @@ int main(int argc, char **argv)
                         argv++;
 
                         if(tokenize(*argv, &token_list) < 0) {
-                        list_iter(&token_list, del_item);
-                        continue;
+                                list_iter(&token_list, del_item);
+                                continue;
                         }
 
                         if(parse(*argv, &token_list, &item_list) < 0) {
@@ -50,7 +50,9 @@ int main(int argc, char **argv)
                         printf("%s = %llf\n", *argv, result);
 
                 }
-                return 0;
+
+                goto EXIT;
+
         }
 
         for(;;) {
@@ -58,7 +60,7 @@ int main(int argc, char **argv)
 
                 fgets(buffer, sizeof(buffer), stdin);
                 if(!strncasecmp(buffer, "exit", 4)) {
-                        return 0;
+                        goto EXIT;
                 }
 
                 if(tokenize(buffer, &token_list) < 0) {
@@ -80,6 +82,11 @@ int main(int argc, char **argv)
 
                 printf("= %llf\n", result);
         }
+
+EXIT:
+        list_iter(&token_list, del_item);
+        list_iter(&item_list, del_item);
+        destroy_tokenizer();
 
         return 0;
 }

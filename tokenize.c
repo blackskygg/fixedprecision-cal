@@ -66,9 +66,14 @@ int tokenize(char* s, struct list_head *token_list)
         return 0;
 }
 
-inline void init_tokenizer()
+void init_tokenizer()
 {
         build_fa_table();
+}
+
+void destroy_tokenizer()
+{
+        destroy_fa_table();
 }
 
 static void tokenizer_error(int errno, char *s)

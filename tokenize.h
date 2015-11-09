@@ -34,6 +34,7 @@ struct token_t {
 };
 
 void init_tokenizer();
+void destroy_tokenizer();
 int tokenize(char* s, struct list_head *token_list);
 
 #endif

@@ -26,5 +26,6 @@
 EXTERN regex_t fa_table[];
 
 void build_fa_table();
+void destroy_fa_table();
 
 #endif
